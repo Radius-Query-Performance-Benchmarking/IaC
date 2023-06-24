@@ -1,0 +1,63 @@
+- hosts: all
+  become: true
+
+  vars:
+    k6_version: 0.45.0
+
+  tasks:
+    - name: Install unzip
+      apt:
+        name: unzip
+        state: present
+        update_cache: yes
+      register: status
+      until: status is success
+      delay: 10
+      retries: 10
+
+    - name: Import GPG key
+      command: gpg -k
+
+    - name: Import k6 GPG key
+      command: gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+
+    - name: Add k6 repository to apt sources
+      shell: echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+
+    - name: Install k6
+      apt:
+        name: k6={{ k6_version }}
+        state: present
+        update_cache: yes
+      register: status
+      until: status is success
+      delay: 10
+      retries: 10
+
+    - name: Copy k6 scripts
+      copy:
+        src: /root/k6
+        dest: /root
+        mode: 0644
+
+    - name: Download load testing datasets
+      shell:
+        cmd: curl -o data.zip "https://zenodo.org/record/8081573/files/data.zip?download=1"
+        chdir: ./k6
+
+    - name: Unzip data.zip
+      unarchive:
+        src: /root/k6/data.zip
+        dest: /root/k6
+        remote_src: yes
+        extra_opts: []
+
+    - name: Remove data.zip
+      shell:
+        cmd: rm data.zip
+        chdir: ./k6
+
+    - name: Create /results directory
+      file:
+        path: /root/k6/results
+        state: directory

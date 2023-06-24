@@ -1,0 +1,28 @@
+- hosts: all
+  become: true
+
+  tasks:
+    - name: Undeploy Docker Compose stack full dataset
+      community.docker.docker_compose:
+        project_src: /root/API
+        state: absent
+      when: dataset is not defined
+
+    - name: Undeploy Docker Compose stack specified dataset
+      community.docker.docker_compose:
+        project_src: /root/API
+        files:
+          - "{{ 'docker-compose.' + dataset + '.yml' }}"
+        state: absent
+      when: dataset is defined
+
+    - name: Prune everything
+      community.docker.docker_prune:
+        containers: true
+        images: true
+        images_filters:
+          dangling: false
+        volumes: true
+        volumes_filters:
+          all: true
+        networks: true

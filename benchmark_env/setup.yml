@@ -1,0 +1,70 @@
+- hosts: all
+  become: true
+
+  vars:
+    docker_ce_version: 5:24.0.0-1~ubuntu.22.04~jammy
+    docker_module_version: 6.1.2
+    docker_compose_module_version: 1.29.2
+
+  tasks:
+    - name: Install required system packages
+      apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+        state: latest
+        update_cache: true
+      register: status
+      until: status is success
+      delay: 10
+      retries: 10
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+      register: status
+      until: status is success
+      delay: 10
+      retries: 10
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu jammy stable
+        state: present
+      register: status
+      until: status is success
+      delay: 10
+      retries: 10
+
+    - name: Install docker-ce
+      apt:
+        name: docker-ce={{ docker_ce_version }}
+        state: latest
+      register: status
+      until: status is success
+      delay: 10
+      retries: 10
+
+    - name: Install Docker Module for Python
+      pip:
+        name:
+          - docker=={{ docker_module_version }}
+          - docker-compose=={{ docker_compose_module_version }}
+
+    - name: Copy source code
+      copy:
+        src: /root/API
+        dest: /root
+        mode: 0644
+
+    - name: Create nginx.env file
+      copy:
+        dest: /root/API/env/nginx.env
+        content: |
+          NGINX_HOST={{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}

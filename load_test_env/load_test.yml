@@ -1,0 +1,27 @@
+- hosts: all
+  become: true
+
+  tasks:
+    - name: Load test /stores endpoint
+      shell:
+        cmd: k6 run -e VUS="{{ item }}" -e DOMAIN_NAME="{{ benchmark_env_ipv4 }}" -e DATASET=search_stores_params_"{{ dataset if dataset is defined else 'full' }}"_"{{ item }}"vu.csv stores_load_test.js --out json=./results/stores_"{{ item }}"_vus.json
+        chdir: ./k6
+      with_items:
+        - 50
+        - 100
+        - 200
+
+    - name: Load test /products endpoint
+      shell:
+        cmd: k6 run -e VUS="{{ item }}" -e DOMAIN_NAME="{{ benchmark_env_ipv4 }}" -e DATASET=search_products_params_"{{ dataset if dataset is defined else 'full' }}"_"{{ item }}"vu.csv products_load_test.js --out json=./results/products_"{{ item }}"_vus.json
+        chdir: ./k6
+      with_items:
+        - 25
+        - 50
+        - 100
+
+    - name: Copy the /results to control node
+      synchronize:
+        src: /root/k6/results/
+        dest: /root/results
+        mode: pull

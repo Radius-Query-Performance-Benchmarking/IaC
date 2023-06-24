@@ -1,0 +1,29 @@
+- hosts: all
+  become: true
+
+  vars:
+    dataset_50k_total_products: 638595
+    dataset_100k_total_products: 1277218
+    dataset_full_total_products: 1854591
+
+  tasks:
+    - name: Deploy Docker Compose stack full dataset
+      community.docker.docker_compose:
+        project_src: /root/API
+      when: dataset is not defined
+
+    - name: Deploy Docker Compose stack specified dataset
+      community.docker.docker_compose:
+        project_src: /root/API
+        files:
+          - "{{ 'docker-compose.' + dataset + '.yml' }}"
+      when: dataset is defined
+
+    - name: Wait until initialization scripts have finished
+      uri:
+        url: http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}/products_loaded
+        return_content: yes
+      register: endpoint_response
+      until: endpoint_response.content|int == {{ dataset_50k_total_products }} or endpoint_response.content|int == {{ dataset_100k_total_products }} or endpoint_response.content|int == {{ dataset_full_total_products }}
+      delay: 15
+      retries: 50

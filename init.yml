@@ -1,0 +1,69 @@
+- hosts: localhost
+  become: yes
+
+  vars:
+    terraform_version: 1.4.6-*
+
+  tasks:
+    - name: Install required system packages
+      apt:
+        pkg:
+          - gnupg
+          - curl
+          - software-properties-common
+        state: latest
+        update_cache: true
+      register: status
+      until: status is success
+      delay: 10
+      retries: 10
+
+    - name: Add HashiCorp GPG apt key
+      apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+      register: status
+      until: status is success
+      delay: 10
+      retries: 10
+
+    - name: Add HashiCorp repository
+      apt_repository:
+        repo: deb https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main
+        state: present
+      register: status
+      until: status is success
+      delay: 10
+      retries: 10
+
+    - name: Install terraform
+      apt:
+        name: terraform={{ terraform_version }}
+        state: present
+      register: status
+      until: status is success
+      delay: 10
+      retries: 10
+
+    - name: Initialize terraform configuration for ./benchmark_env
+      shell:
+        cmd: terraform init
+        chdir: ./benchmark_env
+
+    - name: Initialize terraform configuration for ./load_test_env
+      shell:
+        cmd: terraform init
+        chdir: ./load_test_env
+
+    - name: Generate an SSH key pair without a passphrase
+      command: ssh-keygen -t rsa -C "{{ email_address }}" -f ./tf-digitalocean -N ""
+
+    - name: Set the permissions for the private SSH key
+      file:
+        path: ./tf-digitalocean
+        mode: 0600
+
+    - name: Create /results directory
+      file:
+        path: /root/results
+        state: directory
