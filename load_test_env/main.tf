@@ -14,7 +14,7 @@ data "digitalocean_ssh_key" "ssh_key" {
 }
 
 resource "digitalocean_droplet" "load-test-env" {
-  image      = "ubuntu-22-10-x64"
+  image      = "ubuntu-22-04-x64"
   name       = "load-test-env"
   region     = "fra1"
   size       = "g-2vcpu-8gb"

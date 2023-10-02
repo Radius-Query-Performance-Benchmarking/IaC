@@ -17,7 +17,7 @@ We chose DigitalOcean as our cloud hosting provider because of their generous fr
 
 ## Ansible Control Node Setup
 
-The Control Node, the machine on which Ansible is installed, is responsible for executing Ansible Playbooks to configure the Ansible Hosts - the target servers that Ansible manages. The study was conducted using a machine operating on `Ubuntu 22.10 x64`. Unlike other configuration management tools, Ansible is agentless, meaning that it does not require any specialized software to be installed on the Ansible Hosts being managed.
+The Control Node, the machine on which Ansible is installed, is responsible for executing Ansible Playbooks to configure the Ansible Hosts - the target servers that Ansible manages. The study was conducted using a machine operating on `Ubuntu 22.04 x64`. Unlike other configuration management tools, Ansible is agentless, meaning that it does not require any specialized software to be installed on the Ansible Hosts being managed.
 
 ### Installation Guide
 

@@ -14,7 +14,7 @@ data "digitalocean_ssh_key" "ssh_key" {
 }
 
 resource "digitalocean_droplet" "benchmark-env" {
-  image      = "ubuntu-22-10-x64"
+  image      = "ubuntu-22-04-x64"
   name       = "benchmark-env"
   region     = "fra1"
   size       = "c-4"
